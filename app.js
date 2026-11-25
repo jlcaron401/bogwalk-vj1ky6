@@ -3,7 +3,7 @@
 // geotagged photos, walk tracks and navigation to a pin. Pins live on the phone and move as a .zip via the share sheet.
 // Add ?view to the link for the read-only presentation (no marking tools, no location prompt until asked).
 (() => {
-const APP_VERSION = '2026.11.25';
+const APP_VERSION = '2026.11.25b';
 const { store, esc, feet } = BW;
 const D = window.LAYERS, SH = window.SHARED || { pins: [], photos: [] };
 const $ = (s, r = document) => r.querySelector(s);
@@ -27,15 +27,16 @@ function toast(msg, ms = 2400) {
 const who = () => store.get('who', '') || 'Me';
 
 // ---------- UI state ----------
-const saved = store.get('ui', {}) || {};
+const UI_KEY = VIEW ? 'uiView' : 'ui';                    // the presentation keeps its own settings
+const saved = store.get(UI_KEY, {}) || {};
 const S = { base: saved.base || 'aerial', show: Object.assign({ sent: true, draft: true, parcel: true, contours: false, wetlands: VIEW, brooks: true,
   lots: true, towers: !VIEW, pins: true, tracks: true, shared: true, names: true }, saved.show) };
-const saveUI = () => store.set('ui', { base: S.base, show: S.show });
+const saveUI = () => store.set(UI_KEY, { base: S.base, show: S.show });
 
 // ---------- map ----------
-const bounds = L.latLngBounds(D.bounds);
+const bounds = L.latLngBounds(D.bounds), wideBounds = L.latLngBounds(D.wide);
 const parcelBounds = L.polygon(D.parcel).getBounds();
-const map = L.map('map', { zoomControl: false, maxBounds: bounds.pad(0.8), minZoom: 14, maxZoom: 21, zoomSnap: 0.25, zoomDelta: 0.5,
+const map = L.map('map', { zoomControl: false, maxBounds: wideBounds, maxBoundsViscosity: 0.8, minZoom: 13, maxZoom: 21, zoomSnap: 0.25, zoomDelta: 0.5,
   wheelPxPerZoomLevel: 110, bounceAtZoomLimits: false });
 map.attributionControl.setPrefix(false);
 L.control.scale({ imperial: true, metric: false, position: 'bottomleft', maxWidth: 110 }).addTo(map);
@@ -43,10 +44,15 @@ for (const [name, z] of [['wet', 405], ['plans', 410], ['lines', 420], ['tracks'
 map.getPane('labels').style.pointerEvents = 'none';
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const tiles = (path, o) => L.tileLayer(path, Object.assign({ bounds, errorTileUrl: BLANK, maxZoom: 21, keepBuffer: 4, zIndex: 1 }, o));
+// each base = wide context tiles (z13-16, upscaled when zoomed in) under sharp tiles over the property (z17-18)
+const base2 = (name, attribution) => L.layerGroup([
+  tiles(`tiles/${name}/{z}/{x}/{y}.jpg`, { bounds: wideBounds, minZoom: 13, maxNativeZoom: 16, zIndex: 1, attribution }),
+  tiles(`tiles/${name}_hd/{z}/{x}/{y}.jpg`, { minZoom: 16.75, minNativeZoom: 17, maxNativeZoom: 18, zIndex: 2 }),
+]);
 const BASES = {
-  aerial: { name: 'Aerial', note: 'USDA NAIP photo', layer: tiles('tiles/aerial/{z}/{x}/{y}.jpg', { minZoom: 14, maxNativeZoom: 18, attribution: 'Imagery USDA NAIP · USGS' }) },
-  terrain: { name: 'Terrain', note: 'LiDAR relief + contours', layer: tiles('tiles/terrain/{z}/{x}/{y}.jpg', { minZoom: 14, maxNativeZoom: 18, attribution: 'Terrain USGS 3DEP LiDAR' }) },
-  usgs: { name: 'USGS Topo', note: 'Classic topo map', layer: tiles('tiles/usgstopo/{z}/{x}/{y}.jpg', { minZoom: 13, maxNativeZoom: 16, attribution: 'USGS The National Map' }) },
+  aerial: { name: 'Aerial', note: 'USDA NAIP photo', layer: base2('aerial', 'Imagery USDA NAIP · USGS') },
+  terrain: { name: 'Terrain', note: 'LiDAR relief + contours', layer: base2('terrain', 'Terrain USGS 3DEP LiDAR') },
+  usgs: { name: 'USGS Topo', note: 'Classic topo map', layer: tiles('tiles/usgstopo/{z}/{x}/{y}.jpg', { bounds: wideBounds, minZoom: 13, maxNativeZoom: 16, attribution: 'USGS The National Map' }) },
 };
 function tileOf(lat, lon, z) {
   const n = 2 ** z, r = lat * Math.PI / 180;
@@ -85,6 +91,8 @@ if (!VIEW) {
 }
 OV.names = L.layerGroup(D.names.map(([n, la, lo]) => lbl([la, lo], esc(n), 'place')));
 OV.pins = L.layerGroup(); OV.tracks = L.layerGroup(); OV.shared = L.layerGroup();
+const PIN_LAYER = OV.pins, TRACK_LAYER = OV.tracks;
+if (VIEW) { delete OV.pins; delete OV.tracks; }
 
 function applyLayers() {
   for (const [k, b] of Object.entries(BASES)) { if (k === S.base) b.layer.addTo(map); else map.removeLayer(b.layer); }
@@ -261,6 +269,13 @@ function crossPoint() {
   const top = $('#hud').getBoundingClientRect().bottom;
   return [innerWidth / 2, top + (r.top - top) / 2];
 }
+function reveal(ll) {                                       // pan so a point sits in the open map area beside / above the sheet
+  setTimeout(() => {
+    const [x, y] = crossPoint(), p = map.latLngToContainerPoint(ll);
+    const r = $('#sheet').getBoundingClientRect(), hidden = innerWidth >= 900 ? p.x > r.left - 30 : p.y > r.top - 30 || p.y < 140;
+    if (hidden) map.panBy([p.x - x, p.y - y], { animate: true, duration: 0.4 });
+  }, 60);
+}
 function placeCross() { const [x, y] = crossPoint(); const c = $('#cross'); c.style.left = `${x}px`; c.style.top = `${y}px`; }
 addEventListener('resize', () => { if (!$('#cross').hidden) placeCross(); });
 
@@ -277,13 +292,13 @@ function pinIcon(p, shared) {
 function drawPin(p, shared = false) {
   const key = (shared ? 's:' : '') + p.id; let m = markers.get(key);
   if (!m) {
-    m = L.marker([p.lat, p.lon], { riseOnHover: true }).addTo(shared ? OV.shared : OV.pins);
+    m = L.marker([p.lat, p.lon], { riseOnHover: true }).addTo(shared ? OV.shared : PIN_LAYER);
     m.on('click', () => openDetail(m.pin, shared)); markers.set(key, m);
   }
   m.pin = p; m.setLatLng([p.lat, p.lon]); m.setIcon(pinIcon(p, shared));
 }
 async function loadPins() {
-  (await BW.all('pins')).forEach((p) => drawPin(p));
+  if (!VIEW) (await BW.all('pins')).forEach((p) => drawPin(p));
   SH.pins.forEach((p) => drawPin(p, true));
   updateCount();
 }
@@ -320,6 +335,7 @@ async function openDetail(pin, shared) {
     $('#dNav', body).onclick = () => startNav(pin.lat, pin.lon, pin.note ? `“${pin.note.slice(0, 28)}${pin.note.length > 28 ? '…' : ''}”` : `${t.label} pin`);
     const ed = $('#dEdit', body); if (ed) ed.onclick = () => openEditor({ pin });
   });
+  reveal(L.latLng(pin.lat, pin.lon));
 }
 
 // ---------- photo viewer ----------
@@ -399,7 +415,7 @@ async function deletePin() {
   if (!confirm('Delete this pin and its photos?')) return;
   for (const id of ed.pin.photos || []) await BW.del('photos', id);
   await BW.del('pins', ed.pin.id);
-  const m = markers.get(ed.pin.id); if (m) { OV.pins.removeLayer(m); markers.delete(ed.pin.id); }
+  const m = markers.get(ed.pin.id); if (m) { PIN_LAYER.removeLayer(m); markers.delete(ed.pin.id); }
   closeSheet(); updateCount(); toast('Pin deleted');
 }
 map.on('move', () => { if (!$('#cross').hidden) placeCross(); });
@@ -430,6 +446,7 @@ function openSpot(ll) {
     $('#sNav', body).onclick = () => startNav(ll.lat, ll.lng, 'the spot you picked');
   }, { onClose: () => { if (spotMark) { map.removeLayer(spotMark); spotMark = null; } } });
   spotMark = L.circleMarker(ll, { radius: 9, color: '#fff', weight: 3, fillColor: '#3d8bff', fillOpacity: 0.9, interactive: false }).addTo(map);
+  reveal(ll);
 }
 (() => {
   const c = map.getContainer(); let t = null, sx = 0, sy = 0;
@@ -450,11 +467,11 @@ async function wakeOn() { try { if ('wakeLock' in navigator && !wake) { wake = a
 async function wakeOff() { try { if (wake) await wake.release(); } catch (e) { /* already gone */ } wake = null; }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && (rec || store.get('wake', false))) wakeOn(); });
 function drawTracks(list) {
-  OV.tracks.clearLayers();
+  TRACK_LAYER.clearLayers();
   for (const tr of list) if (tr.pts.length > 1 && (!rec || tr.id !== rec.id)) {
-    L.polyline(tr.pts.map((p) => [p[0], p[1]]), { pane: 'tracks', color: '#ffd7d7', weight: 3, opacity: 0.8, dashArray: '1 6', lineCap: 'round', interactive: false }).addTo(OV.tracks);
+    L.polyline(tr.pts.map((p) => [p[0], p[1]]), { pane: 'tracks', color: '#ffd7d7', weight: 3, opacity: 0.8, dashArray: '1 6', lineCap: 'round', interactive: false }).addTo(TRACK_LAYER);
   }
-  recLine.addTo(OV.tracks);
+  recLine.addTo(TRACK_LAYER);
 }
 function addTrackPoint() {
   if (!rec || fix.acc > 30) return;
@@ -479,6 +496,7 @@ async function stopRec() {
 $('#fabRec').addEventListener('click', () => (rec ? stopRec() : startRec()));
 (async () => {
   const list = await BW.all('tracks'); const rid = store.get('recId', null);
+  if (VIEW) return;
   drawTracks(list); const open = rid && list.find((t) => t.id === rid);
   if (open && !VIEW) startRec(open);
 })();
@@ -543,7 +561,7 @@ async function openList(filter = 'all') {
     body.querySelectorAll('.pin-row').forEach((r) => r.onclick = () => {
       const m = markers.get((r.dataset.shared ? 's:' : '') + r.dataset.id); if (!m) return;
       follow = false; $('#fabLocate').classList.remove('on');
-      map.flyTo(m.getLatLng(), Math.max(map.getZoom(), 18.5), { duration: 0.6 }); openDetail(m.pin, !!r.dataset.shared);
+      map.setZoom(Math.max(map.getZoom(), 18), { animate: false }); openDetail(m.pin, !!r.dataset.shared);
     });
     $('#lShare', body).onclick = shareAll; $('#lImport', body).onclick = () => $('#importInput').click();
   });

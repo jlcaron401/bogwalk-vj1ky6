@@ -214,7 +214,7 @@ label.thumb { display: grid; place-items: center; border: 1.5px dashed rgba(255,
 .plan-card b { display: block; } .plan-card small { color: var(--muted); font-size: 13px; }
 
 /* ---------- toast ---------- */
-#toast { position: fixed; z-index: 6000; left: 50%; bottom: calc(var(--safe-bot) + 100px); transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+#toast { position: fixed; z-index: 6000; left: 50%; top: calc(var(--safe-top) + 104px); transform: translate(-50%, -12px); opacity: 0; pointer-events: none;
   background: #f4f1e8; color: #111; padding: 11px 18px; border-radius: 14px; font-weight: 650; font-size: 15px; max-width: 88vw; text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); transition: opacity .25s, transform .25s var(--ease); }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -231,7 +231,7 @@ label.thumb { display: grid; place-items: center; border: 1.5px dashed rgba(255,
   .grab { display: none; }
   #scrim { display: none; }
   .carousel img { height: 220px; }
-  #toast { bottom: 110px; }
+  #toast { top: 24px; }
   .leaflet-control-scale { margin-bottom: 24px !important; }
 }
 
