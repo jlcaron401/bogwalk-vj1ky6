@@ -1,13 +1,13 @@
 // Offline cache: the app, the map data and every map tile, so the app works on the property with no service.
 // Bump VERSION whenever any file changes so phones pick up the new copy next time they open it online.
 importScripts('precache.js');
-const VERSION = 'bogwalk-2026-11-24b';
+const VERSION = 'bogwalk-2026-11-24c';
 const CORE = ['./', 'index.html', 'app.js', 'style.css', 'vendor/leaflet.js', 'vendor/leaflet.css', 'data/layers.js', 'manifest.webmanifest', 'icon-180.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const c = await caches.open(VERSION);
-    await c.addAll(CORE);
+    await c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' })));   // skip the browser's HTTP cache so updates land
     const tiles = self.TILES || [];
     for (let i = 0; i < tiles.length; i += 20) {                     // tiles in small batches; a failed tile is fetched again later
       await Promise.all(tiles.slice(i, i + 20).map((t) => c.add(t).catch(() => {})));
