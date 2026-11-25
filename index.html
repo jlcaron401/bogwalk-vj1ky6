@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Bog Road Walk</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bog Walk">
+<meta name="theme-color" content="#0f1a12">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="map"></div>
+<div id="cross" class="hidden"></div>
+
+<div id="status">
+  <div id="where">Waiting for GPS…</div>
+  <div id="sub"></div>
+</div>
+
+<div id="side">
+  <button id="btnLayers" class="round" aria-label="Layers">▤</button>
+  <button id="btnList" class="round" aria-label="Pins">☰</button>
+  <button id="btnMe" class="round" aria-label="Center on me">◎</button>
+</div>
+
+<div id="bar">
+  <button id="btnIn" class="big in">KEEP IN</button>
+  <label id="btnPhoto" class="big photo" for="quickPhoto">📷</label>
+  <button id="btnOut" class="big out">KEEP OUT</button>
+</div>
+<input id="quickPhoto" class="vh" type="file" accept="image/*" capture="environment">
+<input id="photoInput" class="vh" type="file" accept="image/*" capture="environment">
+<input id="importInput" class="vh" type="file" accept=".zip,application/zip,.json,application/json,.geojson">
+
+<!-- new / edit pin -->
+<div id="sheet" class="sheet hidden">
+  <div class="sheet-head"><b id="sheetTitle">New pin</b><button id="sheetClose" class="x">✕</button></div>
+  <div class="seg" id="typeRow">
+    <button data-type="in">Keep in</button><button data-type="out">Keep out</button><button data-type="photo">Just a photo</button>
+  </div>
+  <div class="seg" id="placeRow">
+    <button data-place="me">Where I'm standing</button><button data-place="cross">At the crosshair</button>
+  </div>
+  <div id="locLine" class="small"></div>
+  <textarea id="note" rows="3" placeholder="Note (optional): what's here, why in or out"></textarea>
+  <div id="thumbs"></div>
+  <div class="row">
+    <label class="btn secondary" for="photoInput">📷 Add photo</label>
+    <button id="saveBtn" class="btn primary">Save</button>
+  </div>
+  <button id="deleteBtn" class="link danger hidden">Delete this pin</button>
+</div>
+
+<!-- layers -->
+<div id="layersSheet" class="sheet hidden">
+  <div class="sheet-head"><b>Map layers</b><button class="x" data-close="layersSheet">✕</button></div>
+  <div id="layerList"></div>
+  <p class="small">Lines are from the town tax map and our drafts. They can be off 20–50 ft. Trust walls, blazes and pins over the line.</p>
+</div>
+
+<!-- pins list / share -->
+<div id="listSheet" class="sheet hidden">
+  <div class="sheet-head"><b>Pins</b><button class="x" data-close="listSheet">✕</button></div>
+  <div class="row">
+    <button id="shareBtn" class="btn primary">Share all pins</button>
+    <button id="importBtn" class="btn secondary">Import pins</button>
+  </div>
+  <div id="counts" class="small"></div>
+  <div id="pinList"></div>
+  <div class="small" id="about"></div>
+  <button id="whoBtn" class="link">Change who's using this phone</button>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="data/layers.js"></script>
+<script src="precache.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
