@@ -58,12 +58,12 @@ button.chip { cursor: pointer; } button.chip.off { opacity: 0.45; }
 /* ---------- action bar ---------- */
 #actions { position: fixed; z-index: 1000; left: 0; right: 0; bottom: 0; display: flex; gap: 10px; padding: 12px 10px calc(var(--safe-bot) + 12px);
   background: linear-gradient(to top, rgba(8, 12, 10, 0.85), rgba(8, 12, 10, 0.55) 60%, transparent); }
-.act { flex: 1; height: 62px; border-radius: 18px; border: 0; color: #fff; font-weight: 800; font-size: 16px; letter-spacing: 0.2px;
-  display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); transition: transform .1s; }
+.act { flex: 1; min-width: 0; height: 62px; border-radius: 18px; border: 0; color: #fff; font-weight: 800; font-size: 15.5px; letter-spacing: 0; white-space: nowrap;
+  display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4); transition: transform .1s; }
 .act .ic { width: 24px; height: 24px; stroke-width: 2.6; }
 .act.in { background: linear-gradient(180deg, #38dc84, #1fb763); }
 .act.out { background: linear-gradient(180deg, #ff8d3a, #f06a0c); }
-.act.photo { flex: 0 0 66px; background: linear-gradient(180deg, #5a9dff, #2f74ea); }
+.act.photo { flex: 0 0 62px; background: linear-gradient(180deg, #5a9dff, #2f74ea); }
 .act.photo .ic { width: 28px; height: 28px; }
 
 /* ---------- sheet ---------- */
@@ -89,8 +89,8 @@ body.place-mode .sheet { max-height: 56vh; }
 .row-btn .chev { opacity: 0.35; width: 16px; height: 16px; }
 
 .seg { display: flex; gap: 6px; padding: 4px; background: rgba(255, 255, 255, 0.06); border-radius: 14px; }
-.seg button { flex: 1; padding: 10px 6px; border: 0; border-radius: 11px; background: none; font-size: 14px; font-weight: 650; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; }
-.seg button .ic { width: 18px; height: 18px; }
+.seg button { flex: 1; min-width: 0; padding: 10px 4px; border: 0; border-radius: 11px; background: none; font-size: 13.5px; font-weight: 650; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
+.seg button .ic { width: 16px; height: 16px; }
 .seg button.on { background: #f4f1e8; color: #101410; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
 .seg.types button.on[data-v="in"] { background: var(--ok); color: #fff; }
 .seg.types button.on[data-v="out"] { background: var(--keep); color: #fff; }
@@ -243,3 +243,4 @@ label.thumb { display: grid; place-items: center; border: 1.5px dashed rgba(255,
 .ic.inline { width: 15px; height: 15px; vertical-align: -3px; }
 button, label, .fab, .act { touch-action: manipulation; }
 #map { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+@media (max-width: 360px) { .act { font-size: 14px; } .act .ic { width: 20px; height: 20px; } .seg button { font-size: 12.5px; } }

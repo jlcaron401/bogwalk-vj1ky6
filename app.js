@@ -3,7 +3,7 @@
 // geotagged photos, walk tracks and navigation to a pin. Pins live on the phone and move as a .zip via the share sheet.
 // Add ?view to the link for the read-only presentation (no marking tools, no location prompt until asked).
 (() => {
-const APP_VERSION = '2026.11.25b';
+const APP_VERSION = '2026.11.25c';
 const { store, esc, feet } = BW;
 const D = window.LAYERS, SH = window.SHARED || { pins: [], photos: [] };
 const $ = (s, r = document) => r.querySelector(s);
@@ -75,7 +75,7 @@ OV.parcel = L.layerGroup([
   L.polygon(D.parcel, { pane: 'lines', color: '#ff4d5e', weight: 2.6, fill: false, interactive: false }),
 ]);
 OV.contours = tiles('tiles/contours/{z}/{x}/{y}.png', { minZoom: 14, minNativeZoom: 15, maxNativeZoom: 18, zIndex: 5 });
-OV.wetlands = L.layerGroup(D.wetlands.map((w) => L.polygon(w.polys, { pane: 'wet', color: '#56c1ea', weight: 1.2, fillColor: '#56c1ea', fillOpacity: 0.26 })
+OV.wetlands = L.layerGroup(D.wetlands.map((w) => L.polygon(w.polys, { pane: 'wet', color: '#56c1ea', weight: 1.2, fillColor: '#56c1ea', fillOpacity: 0.17 })
   .bindPopup(`<b>${esc(w.type)}</b><br>NWI ${esc(w.code)}${w.regime ? ` · ${esc(w.regime)}` : ''}<br><span style="color:#666">USFWS National Wetlands Inventory (mapped from photos, not delineated)</span>`)));
 OV.brooks = L.layerGroup(D.brooks.map((l) => L.polyline(l, { pane: 'lines', color: '#5cc8ff', weight: 2.4, opacity: 0.95, interactive: false })));
 OV.lots = L.layerGroup([
@@ -89,7 +89,7 @@ if (!VIEW) {
     L.circleMarker([la, lo], { pane: 'lines', radius: 6, color: '#1d1a16', weight: 1.5, fillColor: '#b99bff', fillOpacity: 1, interactive: false }),
     lbl([la, lo], n, 'tower-lbl')]));
 }
-OV.names = L.layerGroup(D.names.map(([n, la, lo]) => lbl([la, lo], esc(n), 'place')));
+OV.names = L.layerGroup(D.names.map(([n, la, lo]) => lbl([la, lo], esc(n).replace(/\n/g, '<br>'), 'place')));
 OV.pins = L.layerGroup(); OV.tracks = L.layerGroup(); OV.shared = L.layerGroup();
 const PIN_LAYER = OV.pins, TRACK_LAYER = OV.tracks;
 if (VIEW) { delete OV.pins; delete OV.tracks; }
@@ -700,7 +700,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(() => {
     const poll = setInterval(async () => {
       const c = await offlineCount();
-      offlineMsg = c.ok || !c.total ? '' : `Saving map for offline use · ${Math.round(c.n / c.total * 100)}%`;
+      offlineMsg = c.ok || !c.total || VIEW ? '' : `Saving map for offline use · ${Math.round(c.n / c.total * 100)}%`;
       if (!fix && !nav) renderHud();
       if (c.ok) { clearInterval(poll); if (!VIEW && !store.get('offlineToast' + APP_VERSION, false)) { store.set('offlineToast' + APP_VERSION, true); toast('Map saved: works with no service'); } }
     }, 1500);
