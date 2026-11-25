@@ -135,6 +135,7 @@ function onFix(p) {
   if (sheetState.place === 'me') showLoc();
 }
 function onGpsErr(e) {
+  if (fix && e.code !== 1) return;                     // keep the last good fix through a timeout
   $('#where').textContent = e.code === 1 ? 'Location is off for this app' : 'Waiting for GPS…';
   $('#sub').textContent = e.code === 1 ? 'Settings → Privacy → Location Services → Safari Websites → While Using' : 'Step into the open for a better fix';
 }
@@ -383,7 +384,8 @@ const kmlEsc = (s) => esc(s).replace(/'/g, '&apos;');
 async function buildExport() {
   const pins = await allRec('pins'); const photos = await allRec('photos'); const enc = new TextEncoder();
   const byPin = (id) => photos.filter((p) => p.pinId === id);
-  const name = (p) => `photos/${p.time.slice(0, 19).replace(/[:T]/g, '-')}_${p.id.slice(0, 6)}.jpg`;
+  const p2 = (n) => String(n).padStart(2, '0');
+  const name = (p) => { const d = new Date(p.time); return `photos/${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}_${p2(d.getHours())}${p2(d.getMinutes())}${p2(d.getSeconds())}_${p.id.slice(0, 6)}.jpg`; };
   const meta = { app: 'Bog Road Walk', exported: new Date().toISOString(), who: store.get('who', ''), pins,
     photos: photos.map(({ blob, ...m }) => Object.assign(m, { file: name(m) })) };
   const gj = { type: 'FeatureCollection', features: pins.map((p) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
@@ -447,8 +449,8 @@ if ('serviceWorker' in navigator) {
       if (c.ok) clearInterval(poll);
     }, 1500);
   }).catch(() => {});
-  let reloaded = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!reloaded) { reloaded = true; toast('App updated'); } });
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController) toast('App updated: close and reopen to use the new version', 5000); });
 }
 
 loadPins();
