@@ -244,3 +244,22 @@ label.thumb { display: grid; place-items: center; border: 1.5px dashed rgba(255,
 button, label, .fab, .act { touch-action: manipulation; }
 #map { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 @media (max-width: 360px) { .act { font-size: 14px; } .act .ic { width: 20px; height: 20px; } .seg button { font-size: 12.5px; } }
+
+/* ---------- passcode ---------- */
+#lock { position: fixed; inset: 0; z-index: 7000; display: grid; place-items: center; padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bot) + 20px);
+  background: radial-gradient(900px 500px at 50% 0%, rgba(53, 224, 138, 0.16), transparent 60%), rgba(6, 10, 8, 0.97);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); transition: opacity .28s; }
+#lock.ok { opacity: 0; }
+.lock-card { width: 100%; max-width: 330px; text-align: center; }
+.lock-card .welcome-logo { margin: 0 auto 14px; }
+.lock-card h1 { margin: 0; font-size: 24px; letter-spacing: -0.4px; }
+.lock-card .lead { color: var(--muted); margin: 4px 0 22px; }
+.dots { display: flex; justify-content: center; gap: 18px; margin-bottom: 30px; height: 16px; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.7); transition: background .12s; }
+.dots i.on { background: #fff; border-color: #fff; }
+.dots.shake { animation: shake .4s; }
+@keyframes shake { 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+.keys { display: grid; grid-template-columns: repeat(3, 76px); gap: 16px 24px; justify-content: center; }
+.keys button { width: 76px; height: 76px; border-radius: 50%; border: 0; background: rgba(255, 255, 255, 0.10); color: #fff; font-size: 30px; font-weight: 400; }
+.keys button:active { background: rgba(255, 255, 255, 0.28); }
+.keys button.del { background: none; font-size: 24px; }

@@ -3,7 +3,7 @@
 // geotagged photos, walk tracks and navigation to a pin. Pins live on the phone and move as a .zip via the share sheet.
 // Add ?view to the link for the read-only presentation (no marking tools, no location prompt until asked).
 (() => {
-const APP_VERSION = '2026.11.25c';
+const APP_VERSION = '2026.11.25d';
 const { store, esc, feet } = BW;
 const D = window.LAYERS, SH = window.SHARED || { pins: [], photos: [] };
 const $ = (s, r = document) => r.querySelector(s);
@@ -684,14 +684,39 @@ function showWelcome(changeWho) {
         <div><span class="b" style="background:#2a342d">${ic('rec')}</span><span><b>Record a walk</b>, navigate back to any pin, and press and hold the map for distances to each line.</span></div>
       </div><div class="sec">Who's walking?</div>`}
       <div class="who"><button class="btn ghost" data-who="Jake">Jake</button><button class="btn ghost" data-who="Alyssa">Alyssa</button></div>
-      <div class="btns" style="margin-top:10px"><button class="btn ghost" data-who="?">Someone else</button></div>
       ${IOS && !STANDALONE && !changeWho ? `<div class="install"><b>Install it first:</b> tap Share at the bottom of Safari, then “Add to Home Screen”. It opens full screen and works with no service.</div>` : ''}`;
     b.querySelectorAll('[data-who]').forEach((x) => x.onclick = () => {
-      let n = x.dataset.who; if (n === '?') n = (prompt('Your name') || '').trim(); if (!n) return;
+      const n = x.dataset.who;
       store.set('who', n); $('#welcome').hidden = true; toast(`Hi ${n}`); startGps(); enableCompass();
     });
   }
   $('#welcome').hidden = false;
+}
+
+// ---------- passcode (field mode only; keeps casual visitors out, it is not real security) ----------
+const PASS_HASH = '371c4661c8fdaf272a00e4578ba8d904f55875c7c20971e00bc59fb5add70b8f';
+const sha = async (t) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map((x) => x.toString(16).padStart(2, '0')).join('');
+function showLock(done) {
+  const lock = $('#lock'), dotsEl = $('#lockDots'); let code = '', busy = false;
+  const dots = () => { dotsEl.innerHTML = [0, 1, 2, 3].map((i) => `<i class="${i < code.length ? 'on' : ''}"></i>`).join(''); };
+  const press = async (k) => {
+    if (busy) return;
+    if (k === 'del') code = code.slice(0, -1); else if (/^\d$/.test(k) && code.length < 4) code += k;
+    dots();
+    if (code.length < 4) return;
+    busy = true;
+    if (await sha('bogwalk:' + code) === PASS_HASH) {
+      store.set('unlocked', PASS_HASH); lock.classList.add('ok');
+      setTimeout(() => { lock.hidden = true; document.removeEventListener('keydown', onKey); done(); }, 280);
+    } else {
+      dotsEl.classList.remove('shake'); void dotsEl.offsetWidth; dotsEl.classList.add('shake');
+      setTimeout(() => { code = ''; dots(); busy = false; }, 420);
+    }
+  };
+  const onKey = (e) => { if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('del'); };
+  lock.querySelector('.keys').onclick = (e) => { const b = e.target.closest('button'); if (b) press(b.dataset.k); };
+  document.addEventListener('keydown', onKey);
+  dots(); lock.hidden = false;
 }
 
 // ---------- offline + startup ----------
@@ -710,7 +735,9 @@ if ('serviceWorker' in navigator) {
 BW.loadElev(D.elev);
 loadPins();
 renderHud();
+const begin = () => { if (!store.get('who', '')) showWelcome(); else startGps(); };
 if (VIEW) { if (!store.get('welcomedView', false)) showWelcome(); }
-else if (!store.get('who', '')) showWelcome(); else startGps();
+else if (store.get('unlocked', '') !== PASS_HASH) showLock(begin);
+else begin();
 window.__bw = { map, onFix, openEditor, openLayers, openList, openMenu, openSpot, openDetail, startNav, stopNav, shareAll, saveEditor, S };
 })();

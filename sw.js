@@ -1,7 +1,7 @@
 // Offline cache: the app, the map data and every map tile, so the app works on the property with no service.
 // Bump VERSION whenever any file changes so phones pick up the new copy next time they open it online.
 importScripts('precache.js');
-const VERSION = 'bogwalk-2026-11-25c';
+const VERSION = 'bogwalk-2026-11-25d';
 const CORE = self.CORE;
 
 self.addEventListener('install', (e) => {
