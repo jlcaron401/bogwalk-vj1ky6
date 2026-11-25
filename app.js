@@ -1,5 +1,5 @@
 'use strict';
-// Bog Road Walk: offline map of 844 Bog Road with GPS, keep-in / keep-out pins and geotagged photos.
+// Bog Road Walk: offline map of 844 Bog Road with GPS, "easement OK" / "keep for us" pins and geotagged photos.
 // Everything stays on the phone (IndexedDB); pins move between phones / to the Mac as a .zip via the share sheet.
 
 const D = window.LAYERS;
@@ -11,7 +11,7 @@ const store = {
 };
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const TYPE_LABEL = { in: 'Keep in', out: 'Keep out', photo: 'Photo' };
+const TYPE_LABEL = { in: 'Easement OK', out: 'Keep for us', photo: 'Photo' };
 const TYPE_COLOR = { in: '#22c55e', out: '#f97316', photo: '#3d8bff' };
 
 function toast(msg, ms = 2600) {
@@ -332,7 +332,7 @@ $('#btnList').addEventListener('click', async () => { closeSheets(); await rende
 async function renderList() {
   const pins = (await allRec('pins')).sort((a, b) => b.time.localeCompare(a.time));
   const n = (t) => pins.filter((p) => p.type === t).length;
-  $('#counts').textContent = `${n('in')} keep in · ${n('out')} keep out · ${n('photo')} photo pins`;
+  $('#counts').textContent = `${n('in')} easement OK · ${n('out')} keep for us · ${n('photo')} photo pins`;
   $('#pinList').innerHTML = pins.map((p) => `<div class="p" data-id="${p.id}"><span class="dot ${p.type}"></span><div><div>${esc(p.note || TYPE_LABEL[p.type])}${p.photos && p.photos.length ? ` · 📷${p.photos.length}` : ''}</div>
       <div class="meta">${esc(p.who || '')} · ${new Date(p.time).toLocaleString()}${fix ? ` · ${feet(map.distance([fix.lat, fix.lon], [p.lat, p.lon]))} away` : ''}</div></div></div>`).join('') || '<p class="small">No pins yet.</p>';
   $('#pinList').querySelectorAll('.p').forEach((r) => r.onclick = () => {

@@ -30,9 +30,9 @@
 </div>
 
 <div id="bar">
-  <button id="btnIn" class="big in">KEEP IN</button>
+  <button id="btnIn" class="big in">EASEMENT<br>OK</button>
   <label id="btnPhoto" class="big photo" for="quickPhoto">📷</label>
-  <button id="btnOut" class="big out">KEEP OUT</button>
+  <button id="btnOut" class="big out">KEEP<br>FOR US</button>
 </div>
 <input id="quickPhoto" class="vh" type="file" accept="image/*" capture="environment">
 <input id="photoInput" class="vh" type="file" accept="image/*" capture="environment">
@@ -42,13 +42,13 @@
 <div id="sheet" class="sheet hidden">
   <div class="sheet-head"><b id="sheetTitle">New pin</b><button id="sheetClose" class="x">✕</button></div>
   <div class="seg" id="typeRow">
-    <button data-type="in">Keep in</button><button data-type="out">Keep out</button><button data-type="photo">Just a photo</button>
+    <button data-type="in">Easement OK</button><button data-type="out">Keep for us</button><button data-type="photo">Just a photo</button>
   </div>
   <div class="seg" id="placeRow">
     <button data-place="me">Where I'm standing</button><button data-place="cross">At the crosshair</button>
   </div>
   <div id="locLine" class="small"></div>
-  <textarea id="note" rows="3" placeholder="Note (optional): what's here, why in or out"></textarea>
+  <textarea id="note" rows="3" placeholder="Note (optional): what's here, why give it or keep it"></textarea>
   <div id="thumbs"></div>
   <div class="row">
     <label class="btn secondary" for="photoInput">📷 Add photo</label>

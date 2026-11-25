@@ -22,7 +22,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); 
 
 #bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; display: flex; gap: 10px;
   padding: 10px 10px calc(var(--safe-bot) + 10px); background: linear-gradient(transparent, rgba(0,0,0,0.55) 30%); }
-.big { flex: 1; height: 64px; border-radius: 16px; border: 0; color: #fff; font-weight: 800; font-size: 18px; letter-spacing: 0.5px;
+.big { flex: 1; height: 64px; border-radius: 16px; border: 0; color: #fff; font-weight: 800; font-size: 17px; line-height: 1.1; letter-spacing: 0.5px; text-align: center;
   display: grid; place-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
 .big.in { background: var(--in); } .big.out { background: var(--out); } .big.photo { flex: 0 0 72px; background: var(--photo); font-size: 28px; }
 .big:active, .round:active, .btn:active { transform: scale(0.97); }
