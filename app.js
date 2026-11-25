@@ -3,7 +3,7 @@
 // geotagged photos, walk tracks and navigation to a pin. Pins live on the phone and move as a .zip via the share sheet.
 // Add ?view to the link for the read-only presentation (no marking tools, no location prompt until asked).
 (() => {
-const APP_VERSION = '2026.11.25d';
+const APP_VERSION = '2026.11.25e';
 const { store, esc, feet } = BW;
 const D = window.LAYERS, SH = window.SHARED || { pins: [], photos: [] };
 const $ = (s, r = document) => r.querySelector(s);
@@ -36,21 +36,23 @@ const saveUI = () => store.set(UI_KEY, { base: S.base, show: S.show });
 // ---------- map ----------
 const bounds = L.latLngBounds(D.bounds), wideBounds = L.latLngBounds(D.wide);
 const parcelBounds = L.polygon(D.parcel).getBounds();
-const map = L.map('map', { zoomControl: false, maxBounds: wideBounds, maxBoundsViscosity: 0.8, minZoom: 13, maxZoom: 21, zoomSnap: 0.25, zoomDelta: 0.5,
+const map = L.map('map', { zoomControl: false, maxBounds: wideBounds, maxBoundsViscosity: 0.8, minZoom: 13, maxZoom: 21.5, zoomSnap: 0.25, zoomDelta: 0.5,
   wheelPxPerZoomLevel: 110, bounceAtZoomLimits: false });
 map.attributionControl.setPrefix(false);
 L.control.scale({ imperial: true, metric: false, position: 'bottomleft', maxWidth: 110 }).addTo(map);
 for (const [name, z] of [['wet', 405], ['plans', 410], ['lines', 420], ['tracks', 430], ['labels', 650]]) map.createPane(name).style.zIndex = z;
 map.getPane('labels').style.pointerEvents = 'none';
 const BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const tiles = (path, o) => L.tileLayer(path, Object.assign({ bounds, errorTileUrl: BLANK, maxZoom: 21, keepBuffer: 4, zIndex: 1 }, o));
-// each base = wide context tiles (z13-16, upscaled when zoomed in) under sharp tiles over the property (z17-18)
-const base2 = (name, attribution) => L.layerGroup([
+const tiles = (path, o) => L.tileLayer(path, Object.assign({ bounds, errorTileUrl: BLANK, maxZoom: 21.5, keepBuffer: 4, zIndex: 1 }, o));
+// each base = wide context tiles (z13-16, upscaled when zoomed in) under sharp tiles over the property
+const base2 = (name, attribution, hdMax = 18, extra = []) => L.layerGroup([
   tiles(`tiles/${name}/{z}/{x}/{y}.jpg`, { bounds: wideBounds, minZoom: 13, maxNativeZoom: 16, zIndex: 1, attribution }),
-  tiles(`tiles/${name}_hd/{z}/{x}/{y}.jpg`, { minZoom: 16.75, minNativeZoom: 17, maxNativeZoom: 18, zIndex: 2 }),
+  tiles(`tiles/${name}_hd/{z}/{x}/{y}.jpg`, { minZoom: 16.75, minNativeZoom: 17, maxNativeZoom: hdMax, zIndex: 2 }),
+  ...extra,
 ]);
 const BASES = {
-  aerial: { name: 'Aerial', note: 'USDA NAIP photo', layer: base2('aerial', 'Imagery USDA NAIP · USGS') },
+  aerial: { name: 'Aerial', note: 'NH 2021–22 · 6-inch', layer: base2('aerial', 'Imagery NH GRANIT 2021–22 6-inch orthophotos', 19, [
+    tiles('tiles/aerial_uhd/{z}/{x}/{y}.jpg', { bounds: L.latLngBounds(D.uhd), minZoom: 19.75, minNativeZoom: 20, maxNativeZoom: 20, zIndex: 3 })]) },
   terrain: { name: 'Terrain', note: 'LiDAR relief + contours', layer: base2('terrain', 'Terrain USGS 3DEP LiDAR') },
   usgs: { name: 'USGS Topo', note: 'Classic topo map', layer: tiles('tiles/usgstopo/{z}/{x}/{y}.jpg', { bounds: wideBounds, minZoom: 13, maxNativeZoom: 16, attribution: 'USGS The National Map' }) },
 };
@@ -651,7 +653,7 @@ function openMenu() {
       </div>
       <div class="sec">About this map</div>
       <div class="card"><div class="row-btn">${ic('info')}<span class="grow">844 Bog Road · Hillsborough, NH<small>Tax Map 3, Lot 39 · ${D.parcelAcres} acres · Jacob L. Caron and Alyssa B. Caron, Trustees. Boundaries are working drafts for the NRCS ACEP-WRE discussion, not a survey.<br><br>
-        Sources: property line, NH GRANIT town tax map; terrain and elevation, USGS 3DEP LiDAR; wetlands, USFWS NWI; brooks, USGS NHD; imagery, USDA NAIP; topo, USGS The National Map.</small></span></div></div>
+        Sources: property line, NH GRANIT town tax map; terrain and elevation, USGS 3DEP LiDAR; wetlands, USFWS NWI; brooks, USGS NHD; imagery, NH GRANIT 2021–22 6-inch leaf-off orthophotos; topo, USGS The National Map.</small></span></div></div>
       <p class="note" style="text-align:center">Bog Road Walk · ${APP_VERSION}</p>`;
     const w = $('#mWho', body); if (w) w.onclick = () => { closeSheet(); showWelcome(true); };
     $('#mWake', body).onchange = (e) => { store.set('wake', e.target.checked); if (e.target.checked) { wakeOn(); toast('Screen stays on while the app is open'); } else if (!rec) wakeOff(); };
